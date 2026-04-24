@@ -1,0 +1,115 @@
+=== LAB 1.2: VPC & NETWORK SETUP DOCUMENTATION ===
+
+Date Created: 11 Apr 2026
+
+VPC DETAILS:
+├─ VPC Name: data-platform-vpc
+├─ VPC ID: vpc-0cdd6f58911997c7e
+├─ CIDR Block: 10.0.0.0/16 (65,536 IP addresses)
+└─ Region: us-east-1
+
+SUBNETS:
+
+├─ PUBLIC SUBNET (for NAT Gateway)
+│ ├─ Name: public-subnet-1a
+│ ├─ ID: subnet-02aac7b3b257c1c9e
+│ ├─ CIDR: 10.0.1.0/24
+│ ├─ AZ: us-east-1a
+│ └─ Route Table: public-route-table (rtb-0cb99e777e4449e8d)
+│
+├─ PRIVATE SUBNET 1 (for Databases)
+│ ├─ Name: private-subnet-1a
+│ ├─ ID: subnet-0c159293e008e5a18
+│ ├─ CIDR: 10.0.2.0/24
+│ ├─ AZ: us-east-1a
+│ └─ Route Table: private-route-table (rtb-0cb99e777e4449e8d)
+│
+└─ PRIVATE SUBNET 2 (for Applications)
+   ├─ Name: private-subnet-1b
+   ├─ ID: subnet-037e77565e75ade4d
+   ├─ CIDR: 10.0.3.0/24
+   ├─ AZ: us-east-1b
+   └─ Route Table: private-route-table (rtb-0cb99e777e4449e8d)
+
+INTERNET CONNECTIVITY:
+
+├─ Internet Gateway
+│ ├─ Name: data-platform-igw
+│ ├─ ID: igw-088d737f73dfe0300
+│ └─ Status: Attached
+│
+└─ NAT Gateway
+   ├─ Name: data-platform-nat
+   ├─ ID: nat-080384a83a52f66dc
+   ├─ Elastic IP: 3.228.80.246
+   ├─ Allocation ID: eipalloc-01930de49dc4389a4
+   ├─ Status: Available
+   └─ Cost: $0.32/hour (DELETE when not in use!)
+
+SECURITY GROUPS:
+
+├─ sg-public-nat
+│ ├─ ID: sg-01146f19832c8fa81
+│ └─ Rules: HTTPS inbound from anywhere
+│
+├─ sg-private-compute
+│ ├─ ID: sg-0a4087d11f33b0016
+│ └─ Rules: All traffic from itself + public-nat
+│
+└─ sg-private-db
+   ├─ ID: sg-0599b834b1d0e3960
+   └─ Rules: MySQL 3306 + PostgreSQL 5432 from compute
+
+VPC ENDPOINTS:
+
+├─ S3 Gateway Endpoint
+│ ├─ ID: vpce-007812af8474031d9
+│ ├─ Cost: FREE
+│ └─ Associated with: private-route-table
+│
+├─ DynamoDB Gateway Endpoint
+│ ├─ ID: vpce-0ea1b4cb93899b0cc
+│ ├─ Cost: FREE
+│ └─ Associated with: private-route-table
+│
+└─ Secrets Manager Interface Endpoint
+   ├─ ID: vpce-0f4129e8f535656bd
+   ├─ Cost: ~$7/month
+   └─ Subnets: private-subnet-1a, private-subnet-1b
+
+ROUTE TABLES:
+
+├─ Public Route Table (rtb-0cb99e777e4449e8d)
+│ ├─ Routes:
+│ │ ├─ 10.0.0.0/16 → Local
+│ │ └─ 0.0.0.0/0 → Internet Gateway (igw-088d737f73dfe0300)
+│ └─ Associated Subnets: public-subnet-1a
+│
+└─ Private Route Table (rtb-0cb99e777e4449e8d)
+   ├─ Routes:
+   │ ├─ 10.0.0.0/16 → Local
+   │ └─ 0.0.0.0/0 → NAT Gateway (nat-080384a83a52f66dc)
+   └─ Associated Subnets: private-subnet-1a, private-subnet-1b
+
+SECURITY ARCHITECTURE:
+
+├─ Internet → IGW → Public Subnet → NAT → Private Subnets
+├─ Private servers can reach internet for updates (via NAT)
+├─ Internet CANNOT reach private servers directly
+└─ Databases only accessible from application servers
+
+NETWORK TRAFFIC FLOW:
+
+├─ Inbound: Internet → IGW → Public SG → (restricted access)
+├─ Outbound (Private Apps): Apps → NAT → IGW → Internet
+├─ Within VPC: All subnets communicate via local routes
+└─ VPC Endpoints: Private → AWS services without internet
+
+COST BREAKDOWN:
+
+├─ NAT Gateway: $0.32/hour (~$232/month if left running 24/7)
+├─ Data transfer via NAT: $0.02/GB
+├─ VPC Endpoints (S3, DynamoDB): FREE
+├─ Secrets Manager Endpoint: ~$7/month
+├─ Internet Gateway: FREE
+├─ VPC itself: FREE

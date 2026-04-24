@@ -1,0 +1,17 @@
+=== LAB 1.3: S3 DATA LAKE DOCUMENTATION ===
+Date Created: April 15, 2026
+AWS Account ID: 1087-8206-9549
+
+MAIN BUCKET:
+Bucket Name: data-lake-1087-8206-9549
+Bucket ARN: arn:aws:s3:::data-lake-1087-8206-9549
+AWS Region: us-east-1 (US East - N. Virginia)
+
+LOGGING BUCKET:
+Bucket Name: data-lake-prod-logs-1087-8206-9549
+Bucket ARN: arn:aws:s3:::data-lake-prod-logs-1087-8206-9549
+AWS Region: us-east-1 (US East - N. Virginia)
+Creation Date: April 15, 2026, 15:45:56 (UTC+00:00)
+
+Account Name: Danny
+Account Color: Unset

@@ -1,0 +1,71 @@
+=== LAB 1.3: S3 DATA LAKE COMPLETE DOCUMENTATION ===
+
+Date Created: April 15, 2026
+AWS Account ID: 108782069549
+
+MAIN BUCKET:
+├─ Name: data-lake-1087-8206-9549
+├─ Region: us-east-1
+├─ ARN: arn:aws:s3:::data-lake-1087-8206-9549
+└─ Status: Available
+
+LOGGING BUCKET:
+├─ Name: data-lake-prod-logs-1087-8206-9549
+├─ Region: us-east-1
+├─ ARN: arn:aws:s3:::data-lake-prod-logs-1087-8206-9549
+└─ Status: Available
+
+SECURITY CONFIGURATION:
+├─ Encryption: SSE-S3 (Enabled)
+├─ Block Public Access: ALL CHECKED
+├─ Bucket Key: Enabled
+└─ Encryption Enforcement: Via Bucket Policy
+
+VERSIONING & RECOVERY:
+├─ Versioning: ENABLED
+├─ Access Logging: ENABLED (via logging bucket)
+├─ CloudTrail: ENABLED
+└─ Server Access Logs: data-lake-prod-logs-1087-8206-9549/s3-access-logs/
+
+FOLDER STRUCTURE:
+├─ raw/ (Raw data, never modified)
+├─ processed/ (Cleaned, validated)
+├─ curated/ (Analytics-ready)
+├─ temp/ (Temporary, auto-deleted)
+└─ archive/ (Long-term storage)
+
+LIFECYCLE POLICIES:
+├─ Policy 1: processed/ → Glacier (90 days), Deep Archive (180 days)
+├─ Policy 2: temp/ → DELETE (1 day)
+└─ Policy 3: archive/ → Glacier → Deep Archive → DELETE (7-year retention)
+
+BUCKET POLICY SUMMARY:
+├─ Enforces HTTPS only
+├─ Denies unencrypted uploads
+├─ Allows DataEngineeringRole (Read/Write/Delete/List)
+├─ Allows GlueServiceRole (ETL operations)
+└─ Allows RedshiftIAMRole (Read-only access)
+
+TAGS:
+├─ Environment: Production
+├─ Owner: DataEngineering
+├─ Purpose: DataLake
+└─ CostCenter: Analytics
+
+COST ESTIMATES:
+├─ Storage (Standard): ~$0.023/GB
+├─ Glacier: ~$0.004/GB
+├─ Deep Archive: ~$0.00099/GB
+└─ Estimated monthly total (1TB): ~$28
+
+COMPLIANCE:
+├─ Encryption: GDPR / HIPAA aligned
+├─ Audit Trail: AWS CloudTrail enabled
+├─ Data Retention: Lifecycle policies enforced
+└─ Access Control: IAM role-based restrictions
+
+USAGE PATTERN:
+├─ Data Engineers → write to processed/
+├─ Data Scientists → query curated/
+├─ Analysts → dashboards from curated/
+├─ Auditors: Review S3 access logs and CloudTrail
