@@ -199,8 +199,15 @@ resource "aws_s3_bucket_policy" "data_lake" {
         Action    = "s3:PutObject"
         Resource  = "${aws_s3_bucket.data_lake.arn}/*"
         Condition = {
-          StringNotEquals = {
+          StringNotEqualsIfExists = {
             "s3:x-amz-server-side-encryption" = "AES256"
+          }
+          # Both conditions must be true for the Deny to fire.
+          # DataSync does not send the SSE header in its access test,
+          # so we exclude it here. The bucket default encryption still
+          # applies, so DataSync writes are encrypted automatically.
+          ArnNotEquals = {
+            "aws:PrincipalArn" = "arn:aws:iam::${var.aws_account_id}:role/DataSyncS3Role"
           }
         }
       },
@@ -229,6 +236,16 @@ resource "aws_s3_bucket_policy" "data_lake" {
         Effect    = "Allow"
         Principal = { AWS = var.redshift_iam_role_arn }
         Action    = ["s3:GetObject", "s3:ListBucket"]
+        Resource = [
+          aws_s3_bucket.data_lake.arn,
+          "${aws_s3_bucket.data_lake.arn}/*"
+        ]
+      },
+      {
+        Sid       = "AllowDataSyncRole"
+        Effect    = "Allow"
+        Principal = { AWS = "arn:aws:iam::${var.aws_account_id}:role/DataSyncS3Role" }
+        Action    = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket", "s3:GetBucketLocation"]
         Resource = [
           aws_s3_bucket.data_lake.arn,
           "${aws_s3_bucket.data_lake.arn}/*"
