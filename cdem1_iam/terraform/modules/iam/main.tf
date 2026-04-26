@@ -74,7 +74,7 @@ resource "aws_iam_role_policy_attachment" "data_engineer_s3" {
 
 resource "aws_iam_role_policy_attachment" "data_engineer_glue" {
   role       = aws_iam_role.data_engineer.name
-  policy_arn = "arn:aws:iam::aws:policy/AWSGlueFullAccess"
+  policy_arn = "arn:aws:iam::aws:policy/AWSGlueConsoleFullAccess"
 }
 
 resource "aws_iam_role_policy_attachment" "data_engineer_redshift" {
@@ -94,7 +94,7 @@ resource "aws_iam_role_policy_attachment" "data_engineer_kinesis" {
 
 resource "aws_iam_role_policy_attachment" "data_engineer_lambda" {
   role       = aws_iam_role.data_engineer.name
-  policy_arn = "arn:aws:iam::aws:policy/AWSLambdaFullAccess"
+  policy_arn = "arn:aws:iam::aws:policy/AWSLambda_FullAccess"
 }
 
 resource "aws_iam_role_policy_attachment" "data_engineer_cloudwatch" {
@@ -250,10 +250,6 @@ resource "aws_iam_role_policy_attachment" "analyst_redshift" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonRedshiftReadOnlyAccess"
 }
 
-resource "aws_iam_role_policy_attachment" "analyst_quicksight" {
-  role       = aws_iam_role.analyst_read_only.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonQuickSightReadOnlyAccess"
-}
 
 resource "aws_iam_role_policy_attachment" "analyst_s3" {
   role       = aws_iam_role.analyst_read_only.name
