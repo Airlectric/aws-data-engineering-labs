@@ -219,6 +219,38 @@ resource "aws_iam_role_policy_attachment" "redshift_cloudwatch" {
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
 }
 
+# Spectrum registers external table definitions in Glue Data Catalog.
+# Without this, CREATE EXTERNAL SCHEMA / CREATE EXTERNAL TABLE fail
+# with glue:CreateTable / glue:GetDatabase denied errors.
+resource "aws_iam_role_policy" "redshift_glue_catalog" {
+  name = "RedshiftGlueCatalogAccess"
+  role = aws_iam_role.redshift_iam.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = "GlueCatalogForSpectrum"
+      Effect = "Allow"
+      Action = [
+        "glue:CreateDatabase",
+        "glue:DeleteDatabase",
+        "glue:GetDatabase",
+        "glue:GetDatabases",
+        "glue:CreateTable",
+        "glue:DeleteTable",
+        "glue:GetTable",
+        "glue:GetTables",
+        "glue:UpdateTable",
+        "glue:GetPartition",
+        "glue:GetPartitions",
+        "glue:BatchCreatePartition",
+        "glue:BatchDeletePartition"
+      ]
+      Resource = "*"
+    }]
+  })
+}
+
 # ============================================================
 # ROLE 5: AnalystReadOnlyRole
 # For analysts and BI teams. Can query and view data but cannot
