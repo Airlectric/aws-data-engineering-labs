@@ -206,8 +206,11 @@ resource "aws_s3_bucket_policy" "data_lake" {
           # DataSync does not send the SSE header in its access test,
           # so we exclude it here. The bucket default encryption still
           # applies, so DataSync writes are encrypted automatically.
-          ArnNotEquals = {
-            "aws:PrincipalArn" = "arn:aws:iam::${var.aws_account_id}:role/DataSyncS3Role"
+          ArnNotLike = {
+            "aws:PrincipalArn" = [
+              "arn:aws:iam::${var.aws_account_id}:role/DataSyncS3Role",
+              "arn:aws:iam::${var.aws_account_id}:role/KinesisFirehoseS3Role"
+            ]
           }
         }
       },
