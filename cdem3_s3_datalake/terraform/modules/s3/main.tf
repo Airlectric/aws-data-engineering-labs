@@ -248,7 +248,7 @@ resource "aws_s3_bucket_policy" "data_lake" {
         Sid       = "AllowDataSyncRole"
         Effect    = "Allow"
         Principal = { AWS = "arn:aws:iam::${var.aws_account_id}:role/DataSyncS3Role" }
-        Action    = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket", "s3:GetBucketLocation"]
+        Action    = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket", "s3:GetBucketLocation", "s3:GetObjectTagging", "s3:PutObjectTagging"]
         Resource = [
           aws_s3_bucket.data_lake.arn,
           "${aws_s3_bucket.data_lake.arn}/*"
