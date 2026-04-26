@@ -3,6 +3,11 @@ output "vpc_id" {
   value       = aws_vpc.main.id
 }
 
+output "vpc_cidr" {
+  description = "CIDR block of data-platform-vpc"
+  value       = aws_vpc.main.cidr_block
+}
+
 output "public_subnet_id" {
   description = "ID of public-subnet-1a (10.0.1.0/24, us-east-1a)"
   value       = aws_subnet.public_1a.id
