@@ -7,7 +7,8 @@
 # showing up in data queries and simplifies lifecycle rules.
 # ============================================================
 resource "aws_s3_bucket" "data_lake" {
-  bucket = "data-lake-prod-${var.aws_account_id}"
+  bucket        = "data-lake-prod-${var.aws_account_id}"
+  force_destroy = true
 
   tags = {
     Name        = "data-lake-prod-${var.aws_account_id}"
@@ -19,7 +20,8 @@ resource "aws_s3_bucket" "data_lake" {
 }
 
 resource "aws_s3_bucket" "logs" {
-  bucket = "data-lake-prod-logs-${var.aws_account_id}"
+  bucket        = "data-lake-prod-logs-${var.aws_account_id}"
+  force_destroy = true
 
   tags = {
     Name        = "data-lake-prod-logs-${var.aws_account_id}"
@@ -244,16 +246,16 @@ resource "aws_s3_bucket_policy" "data_lake" {
           "${aws_s3_bucket.data_lake.arn}/*"
         ]
       },
-      {
-        Sid       = "AllowDataSyncRole"
-        Effect    = "Allow"
-        Principal = { AWS = "arn:aws:iam::${var.aws_account_id}:role/DataSyncS3Role" }
-        Action    = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket", "s3:GetBucketLocation", "s3:GetObjectTagging", "s3:PutObjectTagging"]
-        Resource = [
-          aws_s3_bucket.data_lake.arn,
-          "${aws_s3_bucket.data_lake.arn}/*"
-        ]
-      }
+      # {
+      #   Sid       = "AllowDataSyncRole"
+      #   Effect    = "Allow"
+      #   Principal = { AWS = "arn:aws:iam::${var.aws_account_id}:role/DataSyncS3Role" }
+      #   Action    = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket", "s3:GetBucketLocation", "s3:GetObjectTagging", "s3:PutObjectTagging"]
+      #   Resource = [
+      #     aws_s3_bucket.data_lake.arn,
+      #     "${aws_s3_bucket.data_lake.arn}/*"
+      #   ]
+      # }
     ]
   })
 }
