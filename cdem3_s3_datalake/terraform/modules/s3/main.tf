@@ -211,7 +211,8 @@ resource "aws_s3_bucket_policy" "data_lake" {
           ArnNotLike = {
             "aws:PrincipalArn" = [
               "arn:aws:iam::${var.aws_account_id}:role/DataSyncS3Role",
-              "arn:aws:iam::${var.aws_account_id}:role/KinesisFirehoseS3Role"
+              "arn:aws:iam::${var.aws_account_id}:role/KinesisFirehoseS3Role",
+              "arn:aws:iam::${var.aws_account_id}:role/GlueServiceRole"
             ]
           }
         }
@@ -295,33 +296,38 @@ resource "aws_s3_bucket_policy" "logs" {
 # the console and establish the zone prefixes upfront.
 # ============================================================
 resource "aws_s3_object" "raw" {
-  bucket  = aws_s3_bucket.data_lake.id
-  key     = "raw/"
-  content = ""
+  bucket                 = aws_s3_bucket.data_lake.id
+  key                    = "raw/"
+  content                = ""
+  server_side_encryption = "AES256"
 }
 
 resource "aws_s3_object" "processed" {
-  bucket  = aws_s3_bucket.data_lake.id
-  key     = "processed/"
-  content = ""
+  bucket                 = aws_s3_bucket.data_lake.id
+  key                    = "processed/"
+  content                = ""
+  server_side_encryption = "AES256"
 }
 
 resource "aws_s3_object" "curated" {
-  bucket  = aws_s3_bucket.data_lake.id
-  key     = "curated/"
-  content = ""
+  bucket                 = aws_s3_bucket.data_lake.id
+  key                    = "curated/"
+  content                = ""
+  server_side_encryption = "AES256"
 }
 
 resource "aws_s3_object" "temp" {
-  bucket  = aws_s3_bucket.data_lake.id
-  key     = "temp/"
-  content = ""
+  bucket                 = aws_s3_bucket.data_lake.id
+  key                    = "temp/"
+  content                = ""
+  server_side_encryption = "AES256"
 }
 
 resource "aws_s3_object" "archive" {
-  bucket  = aws_s3_bucket.data_lake.id
-  key     = "archive/"
-  content = ""
+  bucket                 = aws_s3_bucket.data_lake.id
+  key                    = "archive/"
+  content                = ""
+  server_side_encryption = "AES256"
 }
 
 # ============================================================
