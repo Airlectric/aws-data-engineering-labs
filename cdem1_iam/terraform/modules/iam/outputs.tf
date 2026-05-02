@@ -27,3 +27,8 @@ output "data_lake_policy_arn" {
   description = "ARN of DataLakeBucketAccessPolicy"
   value       = aws_iam_policy.data_lake_bucket_access.arn
 }
+
+output "step_functions_execution_role_arn" {
+  description = "ARN of StepFunctionsExecutionRole"
+  value       = aws_iam_role.step_functions_execution.arn
+}

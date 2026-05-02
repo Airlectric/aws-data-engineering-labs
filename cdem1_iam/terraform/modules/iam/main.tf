@@ -287,3 +287,85 @@ resource "aws_iam_role_policy_attachment" "analyst_s3" {
   role       = aws_iam_role.analyst_read_only.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
 }
+
+# ============================================================
+# ROLE 6: StepFunctionsExecutionRole
+# Assumed by Step Functions when running a state machine.
+# It must be allowed to call every service the state machine
+# orchestrates: Lambda (invoke), Glue (startJobRun + poll),
+# SNS (publish), DynamoDB (put item for audit log), and
+# CloudWatch Logs (for Express workflow execution history).
+# Trust: states.amazonaws.com
+# ============================================================
+resource "aws_iam_role" "step_functions_execution" {
+  name        = "StepFunctionsExecutionRole"
+  description = "Execution role for Step Functions state machines - invokes Lambda, Glue, SNS, and DynamoDB"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "states.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "step_functions_permissions" {
+  name = "StepFunctionsPermissions"
+  role = aws_iam_role.step_functions_execution.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "InvokeLambda"
+        Effect = "Allow"
+        Action = ["lambda:InvokeFunction"]
+        Resource = "arn:aws:lambda:*:*:function:*"
+      },
+      {
+        Sid    = "StartAndPollGlueJob"
+        Effect = "Allow"
+        Action = [
+          "glue:StartJobRun",
+          "glue:GetJobRun",
+          "glue:GetJobRuns",
+          "glue:BatchStopJobRun"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "PublishSNS"
+        Effect = "Allow"
+        Action = ["sns:Publish"]
+        Resource = "arn:aws:sns:*:*:Pipeline*"
+      },
+      {
+        Sid    = "WriteDynamoDB"
+        Effect = "Allow"
+        Action = [
+          "dynamodb:PutItem",
+          "dynamodb:GetItem",
+          "dynamodb:UpdateItem"
+        ]
+        Resource = "arn:aws:dynamodb:*:*:table/PipelineExecutionLog"
+      },
+      {
+        Sid    = "CloudWatchLogs"
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogDelivery",
+          "logs:GetLogDelivery",
+          "logs:UpdateLogDelivery",
+          "logs:DeleteLogDelivery",
+          "logs:ListLogDeliveries",
+          "logs:PutResourcePolicy",
+          "logs:DescribeResourcePolicies",
+          "logs:DescribeLogGroups"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
