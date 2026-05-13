@@ -9,16 +9,16 @@ variable "aws_region" {
 }
 
 variable "data_engineer_role_arn" {
-  description = "ARN of DataEngineerRole (from CDEM1)"
+  description = "ARN of DataEngineerRole — granted read/write access via bucket policy"
   type        = string
 }
 
 variable "glue_service_role_arn" {
-  description = "ARN of GlueServiceRole (from CDEM1)"
+  description = "ARN of GlueServiceRole — granted read/write access for ETL jobs"
   type        = string
 }
 
 variable "redshift_iam_role_arn" {
-  description = "ARN of RedshiftIAMRole (from CDEM1)"
+  description = "ARN of RedshiftIAMRole — granted read access for COPY commands"
   type        = string
 }

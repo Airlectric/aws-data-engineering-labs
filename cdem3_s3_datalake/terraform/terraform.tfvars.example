@@ -1,0 +1,7 @@
+aws_region     = "us-east-1"
+aws_account_id = "123456789012"
+
+# IAM role ARNs — obtain these from the IAM setup (cdem1_iam) outputs
+data_engineer_role_arn = "arn:aws:iam::123456789012:role/DataEngineerRole"
+glue_service_role_arn  = "arn:aws:iam::123456789012:role/GlueServiceRole"
+redshift_iam_role_arn  = "arn:aws:iam::123456789012:role/RedshiftIAMRole"

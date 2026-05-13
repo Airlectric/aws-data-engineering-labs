@@ -1,0 +1,16 @@
+# Terraform state and lock files
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Sensitive variable files — copy terraform.tfvars.example and fill in real values
+terraform.tfvars
+
+# SSH keys and credentials
+*.pem
+*.key
+
+# OS noise
+.DS_Store
+Thumbs.db

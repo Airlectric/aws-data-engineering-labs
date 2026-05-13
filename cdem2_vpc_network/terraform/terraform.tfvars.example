@@ -1,0 +1,2 @@
+aws_region         = "us-east-1"
+enable_nat_gateway = true
