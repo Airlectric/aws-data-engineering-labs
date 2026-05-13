@@ -1,0 +1,5 @@
+aws_region     = "us-east-1"
+aws_account_id = "123456789012"
+
+# IAM role ARNs are pulled automatically from terraform/cdem1_iam/terraform.tfstate.
+# Run `terraform apply` in terraform/cdem1_iam/ before applying this root.

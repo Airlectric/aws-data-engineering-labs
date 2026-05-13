@@ -13,7 +13,7 @@ provider "aws" {
 }
 
 module "vpc" {
-  source             = "./modules/vpc"
+  source             = "../modules/vpc"
   aws_region         = var.aws_region
   enable_nat_gateway = var.enable_nat_gateway
 }

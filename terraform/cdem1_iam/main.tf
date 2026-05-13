@@ -13,6 +13,6 @@ provider "aws" {
 }
 
 module "iam" {
-  source         = "./modules/iam"
+  source         = "../modules/iam"
   aws_account_id = var.aws_account_id
 }
