@@ -55,7 +55,12 @@ aws-data-engineering-labs/
 ├── README.md
 │
 ├── terraform/
-│   ├── modules/                  # Reusable modules (called by root configs)
+│   ├── main.tf                   # Central root — deploys all three layers at once
+│   ├── variables.tf
+│   ├── outputs.tf
+│   ├── terraform.tfvars.example
+│   │
+│   ├── modules/                  # Reusable modules shared by both deployment strategies
 │   │   ├── iam/
 │   │   │   ├── main.tf
 │   │   │   ├── variables.tf
@@ -69,19 +74,19 @@ aws-data-engineering-labs/
 │   │       ├── variables.tf
 │   │       └── outputs.tf
 │   │
-│   ├── cdem1_iam/                # Root: deploy IAM roles and policies
+│   ├── cdem1_iam/                # Individual root: IAM only
 │   │   ├── main.tf
 │   │   ├── variables.tf
 │   │   ├── outputs.tf
 │   │   └── terraform.tfvars.example
 │   │
-│   ├── cdem2_vpc_network/        # Root: deploy VPC and network resources
+│   ├── cdem2_vpc_network/        # Individual root: VPC and network only
 │   │   ├── main.tf
 │   │   ├── variables.tf
 │   │   ├── outputs.tf
 │   │   └── terraform.tfvars.example
 │   │
-│   └── cdem3_s3_datalake/        # Root: deploy S3 data lake (requires cdem1_iam)
+│   └── cdem3_s3_datalake/        # Individual root: S3 data lake only (requires cdem1_iam state)
 │       ├── main.tf
 │       ├── variables.tf
 │       ├── outputs.tf
@@ -149,9 +154,48 @@ Expected output:
 
 ---
 
-## Deployment
+## Deployment Strategies
 
-> **Deploy order matters.** The S3 data lake (Layer 3) reads IAM role ARNs from Layer 1's Terraform state. Always apply `cdem1_iam` before `cdem3_s3_datalake`. Layer 2 (`cdem2_vpc_network`) is independent and can be deployed in any order.
+There are two ways to deploy this infrastructure. **Pick one and use it consistently** — do not mix them, as each strategy maintains its own separate Terraform state file.
+
+| | Strategy | State file | Best for |
+|-|----------|-----------|----------|
+| **A** | Central root — one `apply` for everything | `terraform/terraform.tfstate` | Fresh deployments, clean teardown |
+| **B** | Layer by layer — apply each root separately | one `.tfstate` per layer | Incremental changes, debugging a single layer |
+
+---
+
+### Strategy A — All at Once (Central Root)
+
+A single root at `terraform/` calls all three modules together. Terraform resolves the dependency between IAM and S3 internally — no remote state required.
+
+```bash
+cd terraform
+
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars:
+#   aws_account_id     = "123456789012"
+#   aws_region         = "us-east-1"
+#   enable_nat_gateway = true
+
+terraform init
+terraform validate
+terraform plan
+terraform apply
+```
+
+To destroy everything:
+
+```bash
+cd terraform
+terraform destroy
+```
+
+---
+
+### Strategy B — Layer by Layer (Individual Roots)
+
+> **Deploy order matters.** The S3 data lake (Layer 3) reads IAM role ARNs from Layer 1's Terraform state via `terraform_remote_state`. Always apply `cdem1_iam` before `cdem3_s3_datalake`. Layer 2 (`cdem2_vpc_network`) is independent and can be deployed in any order.
 
 ### Layer 1 — IAM Roles & Policies
 
@@ -303,7 +347,7 @@ terraform apply
 
 **Gateway VPC Endpoints for S3 and DynamoDB** — Gateway endpoints are free and route traffic to S3 and DynamoDB over the AWS private backbone. This avoids NAT Gateway data-processing charges for high-volume S3 reads/writes from private subnets.
 
-**Remote state dependency** — `cdem3_s3_datalake` reads the IAM role ARNs directly from `cdem1_iam`'s Terraform state file via `terraform_remote_state`. This eliminates hardcoded ARNs and ensures the bucket policy always references the exact roles that exist in the account.
+**Two deployment strategies, one module codebase** — The `terraform/modules/` directory holds all reusable logic. The central root (`terraform/`) calls all three modules in a single state, resolving IAM→S3 dependencies natively through module outputs. The individual roots (`cdem1_iam/`, `cdem2_vpc_network/`, `cdem3_s3_datalake/`) each manage one layer independently, with `cdem3_s3_datalake` reading IAM role ARNs from `cdem1_iam`'s state file via `terraform_remote_state`. Both strategies produce identical infrastructure — the difference is only in how state is organised.
 
 ---
 
@@ -328,14 +372,25 @@ terraform apply
 
 ## Teardown
 
-Destroy each layer in reverse order (deepest dependency first):
+> **Note:** The S3 buckets are created with `force_destroy = true`, so `terraform destroy` will delete all objects in the bucket automatically. Make sure you do not need the data before destroying.
+
+### Strategy A — Central Root
 
 ```bash
-# Layer 3 first
+cd terraform
+terraform destroy
+```
+
+### Strategy B — Layer by Layer
+
+Destroy in reverse order — deepest dependency first:
+
+```bash
+# Layer 3 first (depends on Layer 1 state)
 cd terraform/cdem3_s3_datalake
 terraform destroy
 
-# Layer 2
+# Layer 2 (independent)
 cd ../cdem2_vpc_network
 terraform destroy
 
@@ -343,8 +398,6 @@ terraform destroy
 cd ../cdem1_iam
 terraform destroy
 ```
-
-> **Note:** The S3 buckets are created with `force_destroy = true`, so `terraform destroy` will delete all objects in the bucket automatically. Make sure you do not need the data before destroying.
 
 ---
 
@@ -356,8 +409,11 @@ A bucket with that name already exists in your account from a previous run. Eith
 **`Error: AccessDenied` on `terraform apply`**
 Your AWS credentials do not have sufficient permissions. Confirm that the IAM user or role running Terraform has `AdministratorAccess` or at minimum permissions for IAM, S3, VPC, CloudTrail, and EC2.
 
-**`Error: reading remote state`** (cdem3_s3_datalake)
-`cdem1_iam` has not been applied yet or its `terraform.tfstate` file is missing. Run `terraform apply` in `terraform/cdem1_iam/` first.
+**`Error: reading remote state`** (Strategy B — `cdem3_s3_datalake` only)
+`cdem1_iam` has not been applied yet or its `terraform.tfstate` file is missing. Run `terraform apply` in `terraform/cdem1_iam/` first. This error does not occur with Strategy A (central root), which wires IAM outputs directly.
+
+**`Error: resources already exist`** when mixing strategies
+Each strategy has its own state file. Applying Strategy A after Strategy B (or vice versa) will cause conflicts because Terraform doesn't know the other strategy's resources exist. Destroy one strategy completely before switching to the other.
 
 **`Error: VpcLimitExceeded`**
 AWS default limit is 5 VPCs per region. Delete an unused VPC in the AWS console or request a limit increase.
